@@ -14,5 +14,6 @@
         <!-- Mapeamento de classes -->
         <!-- Exemplo: <mapping class="com.example.Entidade"/> -->
         <mapping class="org.example.entities.User"/>
+        <mapping class="org.example.entities.Vehicles"/>
     </session-factory>
 </hibernate-configuration>

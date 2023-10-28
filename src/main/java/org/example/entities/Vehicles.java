@@ -22,6 +22,10 @@ public class Vehicles {
     @Column(name = "category")
     @Enumerated(EnumType.STRING)
     private VehicleCategory category;
+    @Column(name = "rented")
+    private boolean rented;
+    @Column(name = "price")
+    private double price;
 
 
     public void setId(Long id) {
@@ -70,5 +74,32 @@ public class Vehicles {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public boolean isRented() {
+        return rented;
+    }
+
+    public void setRented(boolean rented) {
+        this.rented = rented;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String dataVehicle(){
+        return "==================================================\n" +
+                "Placa: " + this.getLicensePlate() + "\n" +
+                "Modelo: " + this.getModel() + "\n" +
+                "Cor: " + this.getColor() + "\n" +
+                "Ano: " + this.getYear() + "\n" +
+                "Categoria: " + this.getCategory() + "\n" +
+                "Preço: " + this.getPrice() + "\n" +
+                "==================================================\n";
     }
 }

@@ -5,6 +5,7 @@
     <persistence-unit name="car_rental_unit">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>org.example.entities.User</class>
+        <class>org.example.entities.Vehicles</class>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/car_rental"/>
             <property name="javax.persistence.jdbc.user" value="root"/>

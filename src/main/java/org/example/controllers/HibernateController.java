@@ -1,10 +1,14 @@
 package org.example.controllers;
 
+import org.example.entities.Vehicles;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
+
+import java.util.Collections;
+import java.util.List;
 
 
 public class HibernateController {
@@ -98,5 +102,89 @@ public class HibernateController {
 
     }
 
+    public <T> List<T> selectAllGeneric(Class<T> entityType, String query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = :paramValue";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            hqlQuery.setParameter("paramValue", query);
+            List<T> resultList = hqlQuery.list();
+            transaction.commit();
+            return resultList;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+
+    }
+        public <T> List<T> selectAllGeneric(Class<T> entityType, int query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = :paramValue";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            hqlQuery.setParameter("paramValue", query);
+            List<T> resultList = hqlQuery.list();
+            transaction.commit();
+            return resultList;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+
+    }
+        public <T> List<T> selectAllGeneric(Class<T> entityType, boolean query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = :paramValue";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            hqlQuery.setParameter("paramValue", query);
+            List<T> resultList = hqlQuery.list();
+            transaction.commit();
+            return resultList;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+
+    }
+        public <T> List<T> selectAllGeneric(Class<T> entityType, float query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = :paramValue";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            hqlQuery.setParameter("paramValue", query);
+            List<T> resultList = hqlQuery.list();
+            transaction.commit();
+            return resultList;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+
+    }
+
+    public List<Vehicles> getVehicleRented() {
+        return this.selectAllGeneric(Vehicles.class, true, "rented");
+    }
+
+    public List<Vehicles> getVehicleNotRented() {
+        return this.selectAllGeneric(Vehicles.class, false, "rented");
+    }
 
 }

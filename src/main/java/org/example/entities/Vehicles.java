@@ -10,7 +10,8 @@ public class Vehicles {
 
     @Id
     @Column(name = "id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     @Column(name = "license_plate")
     private String licensePlate;
     @Column(name = "model")
@@ -28,11 +29,11 @@ public class Vehicles {
     private double price;
 
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
@@ -94,6 +95,7 @@ public class Vehicles {
 
     public String dataVehicle(){
         return "==================================================\n" +
+                "código: " + this.getId() + "\n" +
                 "Placa: " + this.getLicensePlate() + "\n" +
                 "Modelo: " + this.getModel() + "\n" +
                 "Cor: " + this.getColor() + "\n" +

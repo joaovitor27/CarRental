@@ -1,20 +1,23 @@
 package org.example;
 
 import org.example.controllers.HibernateController;
+import org.example.entities.Rental;
 import org.example.entities.User;
 import org.example.entities.Vehicles;
+import org.example.enums.VehicleCategory;
+import org.example.records.TotalPriceRental;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
         updateDataBase(); // This method is used to update the database
 
         HibernateController hibernateController = new HibernateController();
@@ -81,7 +84,6 @@ public class Main {
                             vehicles.forEach(vehicle -> System.out.println(vehicle.dataVehicle()));
                         }
                     } else if (Objects.equals(option, "3")) {
-
                         List<Vehicles> vehicles = hibernateController.getVehicleNotRented();
                         if (vehicles.isEmpty()) {
                             System.out.println("===================================");
@@ -92,7 +94,8 @@ public class Main {
                         }
                         vehicles.forEach(vehicle -> System.out.println(vehicle.dataVehicle()));
                     } else if (Objects.equals(option, "4")) {
-                        System.out.println("Cadastrar um carro");
+                        Vehicles vehicle = registerVehicle(scanner, hibernateController);
+                        vehicle.dataVehicle();
                     } else {
                         System.out.println("Opção inválida!");
                     }
@@ -104,7 +107,90 @@ public class Main {
                         System.out.println("Saindo...");
                         break;
                     } else if (Objects.equals(option, "2")) {
-                        System.out.println("Alugar um carro");
+                        if (user.isCarRental()) {
+                            System.out.println("Você já possui um carro alugado!");
+                            continue;
+                        }
+                        while (true) {
+                            System.out.println("Escolha uma categoria de veículos:");
+                            System.out.println("1 - Cancelar");
+                            System.out.println("2 - SEDAN");
+                            System.out.println("3 - SUV");
+                            System.out.println("4 - HATCH");
+                            String category = scanner.nextLine();
+                            if (Objects.equals(category, "1")) {
+                                break;
+                            } else if (Objects.equals(category, "2")) {
+                                List<Vehicles> vehicles = hibernateController.getVehicleByCategory(VehicleCategory.valueOf("SEDAN"));
+                                vehicles.forEach(vehicle -> System.out.println(vehicle.dataVehicle()));
+                                break;
+                            } else if (Objects.equals(category, "3")) {
+                                List<Vehicles> vehicles = hibernateController.getVehicleByCategory(VehicleCategory.valueOf("SUV"));
+                                vehicles.forEach(vehicle -> System.out.println(vehicle.dataVehicle()));
+                                break;
+                            } else if (Objects.equals(category, "4")) {
+                                List<Vehicles> vehicles = hibernateController.getVehicleByCategory(VehicleCategory.valueOf("HATCH"));
+                                vehicles.forEach(vehicle -> System.out.println(vehicle.dataVehicle()));
+                                break;
+                            } else {
+                                System.out.println("Opção inválida!");
+                            }
+                        }
+                        System.out.println("Digite o código do carro que deseja alugar:");
+                        String id = scanner.nextLine();
+                        Vehicles vehicle = hibernateController.selectGeneric(Vehicles.class, Integer.parseInt(id), "id");
+                        System.out.println("Carro escolhido:");
+                        System.out.println(vehicle.dataVehicle());
+                        if (vehicle.isRented()) {
+                            System.out.println("Carro já alugado!");
+                            Rental rental = hibernateController.selectGeneric(Rental.class, vehicle.getId(), "vehicle_id");
+                            System.out.println("O veículo estará disponível a partir do dia " + rental.getEndDate());
+                            System.out.println("Deseja agenda-lo para quando estiver disponível? (S/N)");
+                        } else {
+                            System.out.println("Deseja alugar esse carro? (S/N)");
+                        }
+                        String answer = scanner.nextLine();
+                        if (Objects.equals(answer, "S")) {
+                            TotalPriceRental total;
+                            if (vehicle.isRented()) {
+                                Rental rental = hibernateController.selectGeneric(Rental.class, vehicle.getId(), "vehicle_id");
+                                String startDate;
+                                while (true) {
+                                    System.out.println("Data de aluguel ou S para sair:");
+                                    startDate = scanner.nextLine();
+                                    if (startDate.equals("S")) {
+                                        break;
+                                    }
+                                    if (parseDate(startDate).before(rental.getEndDate())) {
+                                        System.out.println("Data inválida!");
+                                        continue;
+                                    }
+                                    break;
+                                }
+                                if (startDate.equals("S")) {
+                                    continue;
+                                }
+
+                                total = totalPriceRental(scanner, vehicle, parseDate(startDate));
+                            } else {
+                                total = totalPriceRental(scanner, vehicle, null);
+                            }
+                            System.out.println("O valor total para " + total.days() + " dias é de: " + total.totalPrice() + " R$");
+                            System.out.println("Deseja confirmar o aluguel? (S/N)");
+                            String confirm = scanner.nextLine();
+                            if (Objects.equals(confirm, "S")) {
+                                registerRental(hibernateController, user, vehicle, total);
+                            } else {
+                                continue;
+                            }
+                            vehicle.setRented(true);
+                            hibernateController.update(vehicle);
+                            user.setCarRental(true);
+                            hibernateController.update(user);
+                            System.out.println("Carro alugado com sucesso!");
+                        } else {
+                            System.out.println("Ok, carro não alugado!");
+                        }
                     } else if (Objects.equals(option, "3")) {
                         System.out.println("Devolver um carro");
                     } else if (Objects.equals(option, "4")) {
@@ -165,10 +251,70 @@ public class Main {
         System.out.println("Usuário cadastrado com sucesso!");
     }
 
+    public static Vehicles registerVehicle(Scanner scanner, HibernateController hibernateController) {
+        System.out.println("Cadastro de veículos:");
+        System.out.println("Modelo:");
+        String model = scanner.nextLine();
+        System.out.println("Ano:");
+        String year = scanner.nextLine();
+        System.out.println("Placa:");
+        String licensePlate = scanner.nextLine();
+        System.out.println("Cor:");
+        String color = scanner.nextLine();
+        System.out.println("Valor da diária:");
+        String price = scanner.nextLine();
+        System.out.println("Categoria:");
+        String category = scanner.nextLine();
+        Vehicles vehicle = new Vehicles();
+        vehicle.setModel(model);
+        vehicle.setYear(year);
+        vehicle.setLicensePlate(licensePlate);
+        vehicle.setPrice(Double.parseDouble(price));
+        vehicle.setColor(color);
+        vehicle.setCategory(VehicleCategory.valueOf(category));
+        hibernateController.save(vehicle);
+        System.out.println("Veículo cadastrado com sucesso!");
+        return vehicle;
+    }
+
+    public static TotalPriceRental totalPriceRental(Scanner scanner, Vehicles vehicle, Date startDate) throws ParseException {
+        if (startDate == null) {
+            System.out.println("Data de início:");
+            startDate = parseDate(scanner.nextLine());
+        }
+        System.out.println("Data de fim:");
+        Date endDate = parseDate(scanner.nextLine());
+        int days = (int) ((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        System.out.println("Valor total:");
+        String totalPrice = days * vehicle.getPrice() + "";
+        System.out.println("Valor total: " + totalPrice);
+        return new TotalPriceRental(startDate, endDate, Double.parseDouble(totalPrice), days);
+    }
+
+    public static void registerRental(HibernateController hibernateController,
+                                      User user,
+                                      Vehicles vehicle,
+                                      TotalPriceRental total
+    ) {
+        Rental rental = new Rental();
+        rental.setStartDate(total.startDate());
+        rental.setEndDate(total.endDate());
+        rental.setTotalPrice(total.totalPrice());
+        rental.setUser(user);
+        rental.setVehicle(vehicle);
+        hibernateController.save(rental);
+        System.out.println("Aluguel cadastrado com sucesso!");
+    }
+
     public static void updateDataBase() {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("car_rental_unit");
         EntityManager em = emf.createEntityManager();
         em.close();
         emf.close();
+    }
+
+    public static Date parseDate(String dateString) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        return dateFormat.parse(dateString);
     }
 }

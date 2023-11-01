@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import org.example.entities.Vehicles;
+import org.example.enums.VehicleCategory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -35,10 +36,9 @@ public class HibernateController {
     }
 
     public void save(Object objeto) {
-        Session session = sessionFactory.openSession();
 
         Transaction transaction = null;
-        try (session) {
+        try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
             session.save(objeto);
             transaction.commit();
@@ -99,7 +99,45 @@ public class HibernateController {
             e.printStackTrace();
             return null; // Ou lance uma exceção personalizada, se preferir
         }
+    }
 
+    public <T> T selectGeneric(Class<T> entityType, int query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName();
+            if (parameter != null) {
+                hql += " WHERE " + parameter + " = '" + query + "'";
+            }
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            T entity = hqlQuery.uniqueResult();
+            transaction.commit();
+            return entity;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+    }
+
+    public <T> T selectGeneric(Class<T> entityType, Long query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = '" + query + "'";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            T entity = hqlQuery.uniqueResult();
+            transaction.commit();
+            return entity;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
     }
 
     public <T> List<T> selectAllGeneric(Class<T> entityType, String query, String parameter) {
@@ -119,9 +157,28 @@ public class HibernateController {
             e.printStackTrace();
             return null; // Ou lance uma exceção personalizada, se preferir
         }
-
     }
-        public <T> List<T> selectAllGeneric(Class<T> entityType, int query, String parameter) {
+
+    public <T> List<T> selectAllGeneric(Class<T> entityType, VehicleCategory query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = :paramValue";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            hqlQuery.setParameter("paramValue", query);
+            List<T> resultList = hqlQuery.list();
+            transaction.commit();
+            return resultList;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+    }
+
+    public <T> List<T> selectAllGeneric(Class<T> entityType, int query, String parameter) {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -140,7 +197,8 @@ public class HibernateController {
         }
 
     }
-        public <T> List<T> selectAllGeneric(Class<T> entityType, boolean query, String parameter) {
+
+    public <T> List<T> selectAllGeneric(Class<T> entityType, boolean query, String parameter) {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -159,7 +217,8 @@ public class HibernateController {
         }
 
     }
-        public <T> List<T> selectAllGeneric(Class<T> entityType, float query, String parameter) {
+
+    public <T> List<T> selectAllGeneric(Class<T> entityType, float query, String parameter) {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
@@ -185,6 +244,10 @@ public class HibernateController {
 
     public List<Vehicles> getVehicleNotRented() {
         return this.selectAllGeneric(Vehicles.class, false, "rented");
+    }
+
+    public List<Vehicles> getVehicleByCategory(VehicleCategory category) {
+        return this.selectAllGeneric(Vehicles.class, category, "category");
     }
 
 }

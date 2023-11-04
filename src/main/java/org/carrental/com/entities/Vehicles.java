@@ -1,8 +1,11 @@
-package org.example.entities;
+package org.carrental.com.entities;
 
-import org.example.enums.VehicleCategory;
+import org.carrental.com.controllers.HibernateController;
+import org.carrental.com.enums.VehicleCategory;
 
 import javax.persistence.*;
+import java.util.List;
+import java.util.Scanner;
 
 @Entity
 @Table(name = "vehicles")
@@ -27,11 +30,6 @@ public class Vehicles {
     private boolean rented;
     @Column(name = "price")
     private double price;
-
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public int getId() {
         return id;
@@ -93,7 +91,7 @@ public class Vehicles {
         this.price = price;
     }
 
-    public String dataVehicle(){
+    public String dataVehicle() {
         return "==================================================\n" +
                 "código: " + this.getId() + "\n" +
                 "Placa: " + this.getLicensePlate() + "\n" +
@@ -104,4 +102,47 @@ public class Vehicles {
                 "Preço: " + this.getPrice() + "\n" +
                 "==================================================\n";
     }
+
+    public static List<Vehicles> getVehicleRented() {
+        return new HibernateController().selectAllGeneric(Vehicles.class, true, "rented");
+    }
+
+    public static List<Vehicles> getVehicleNotRented() {
+        return new HibernateController().selectAllGeneric(Vehicles.class, false, "rented");
+    }
+
+    public static List<Vehicles> getVehicleByCategory(VehicleCategory category) {
+        return new HibernateController().selectAllGeneric(Vehicles.class, category, "category");
+    }
+
+    public static void updateVehicle(Vehicles vehicle) {
+        new HibernateController().update(vehicle);
+    }
+
+    public static Vehicles registerVehicle(Scanner scanner) {
+        System.out.println("Cadastro de veículos:");
+        System.out.println("Modelo:");
+        String model = scanner.nextLine();
+        System.out.println("Ano:");
+        String year = scanner.nextLine();
+        System.out.println("Placa:");
+        String licensePlate = scanner.nextLine();
+        System.out.println("Cor:");
+        String color = scanner.nextLine();
+        System.out.println("Valor da diária:");
+        String price = scanner.nextLine();
+        System.out.println("Categoria:");
+        String category = scanner.nextLine();
+        Vehicles vehicle = new Vehicles();
+        vehicle.setModel(model);
+        vehicle.setYear(year);
+        vehicle.setLicensePlate(licensePlate);
+        vehicle.setPrice(Double.parseDouble(price));
+        vehicle.setColor(color);
+        vehicle.setCategory(VehicleCategory.valueOf(category));
+        new HibernateController().save(vehicle);
+        System.out.println("Veículo cadastrado com sucesso!");
+        return vehicle;
+    }
+
 }

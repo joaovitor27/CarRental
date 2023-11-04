@@ -1,14 +1,15 @@
-package org.example.controllers;
+package org.carrental.com.controllers;
 
-import org.example.entities.Vehicles;
-import org.example.enums.VehicleCategory;
+import org.carrental.com.enums.VehicleCategory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
 
-import java.util.Collections;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.util.List;
 
 
@@ -17,6 +18,20 @@ public class HibernateController {
 
     public HibernateController() {
         configureSessionFactory();
+    }
+
+    public HibernateController(Boolean update) {
+        configureSessionFactory();
+        if (update) {
+            updateDataBase();
+        }
+    }
+
+    public static void updateDataBase() {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("car_rental_unit");
+        EntityManager em = emf.createEntityManager();
+        em.close();
+        emf.close();
     }
 
     private void configureSessionFactory() {
@@ -101,13 +116,31 @@ public class HibernateController {
         }
     }
 
+    public <T> T selectRentalUserActive(Class<T> entityType, int query, String parameter) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            String hql = "FROM " + entityType.getSimpleName() + " WHERE " + parameter + " = " + query + " AND is_active = true";
+            Query<T> hqlQuery = session.createQuery(hql, entityType);
+            T entity = hqlQuery.uniqueResult();
+            transaction.commit();
+            return entity;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return null; // Ou lance uma exceção personalizada, se preferir
+        }
+    }
+
     public <T> T selectGeneric(Class<T> entityType, int query, String parameter) {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
             String hql = "FROM " + entityType.getSimpleName();
             if (parameter != null) {
-                hql += " WHERE " + parameter + " = '" + query + "'";
+                hql += " WHERE " + parameter + " = " + query;
             }
             Query<T> hqlQuery = session.createQuery(hql, entityType);
             T entity = hqlQuery.uniqueResult();
@@ -237,17 +270,4 @@ public class HibernateController {
         }
 
     }
-
-    public List<Vehicles> getVehicleRented() {
-        return this.selectAllGeneric(Vehicles.class, true, "rented");
-    }
-
-    public List<Vehicles> getVehicleNotRented() {
-        return this.selectAllGeneric(Vehicles.class, false, "rented");
-    }
-
-    public List<Vehicles> getVehicleByCategory(VehicleCategory category) {
-        return this.selectAllGeneric(Vehicles.class, category, "category");
-    }
-
 }

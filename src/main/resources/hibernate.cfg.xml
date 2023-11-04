@@ -13,8 +13,8 @@
         <property name="hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
         <!-- Mapeamento de classes -->
         <!-- Exemplo: <mapping class="com.example.Entidade"/> -->
-        <mapping class="org.example.entities.User"/>
-        <mapping class="org.example.entities.Vehicles"/>
-        <mapping class="org.example.entities.Rental"/>
+        <mapping class="org.carrental.com.entities.User"/>
+        <mapping class="org.carrental.com.entities.Vehicles"/>
+        <mapping class="org.carrental.com.entities.Rental"/>
     </session-factory>
 </hibernate-configuration>

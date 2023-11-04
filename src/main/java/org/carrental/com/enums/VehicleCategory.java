@@ -1,4 +1,4 @@
-package org.example.enums;
+package org.carrental.com.enums;
 
 public enum VehicleCategory {
     SEDAN,

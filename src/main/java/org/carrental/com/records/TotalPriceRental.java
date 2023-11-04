@@ -1,4 +1,4 @@
-package org.example.records;
+package org.carrental.com.records;
 
 import java.util.Date;
 
